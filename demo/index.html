@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>boo-dialog demo</title>
+
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+
+    <script type="module">
+      import '@polymer/iron-demo-helpers/demo-pages-shared-styles';
+      import '@polymer/iron-demo-helpers/demo-snippet';
+    </script>
+
+    <script type="module" src="../boo-dialog.js"></script>
+
+    <custom-style>
+      <style is="custom-style" include="demo-pages-shared-styles">
+        [wrapper] {
+          width: 500px;
+          height: 400px;
+        }
+      </style>
+    </custom-style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic boo-dialog demo</h3>
+      <demo-snippet>
+        <template>
+          <button id="btn">open</button>
+          <boo-dialog id="dialog">
+            <main wrapper>
+              <h1>hello world</h1>
+            </main>
+          </boo-dialog>
+        </template>
+      </demo-snippet>
+    </div>
+    <script>
+      window.onload = function() {
+        let btn = document.getElementById('btn');
+        btn.addEventListener('click', e => {
+          document.getElementById('dialog').setAttribute('opened', true);
+        });
+      };
+    </script>
+  </body>
+</html>
