@@ -103,15 +103,20 @@ class BooDialog extends LitElement {
     setTimeout(() => {
       this.updateUI();
       this.style.visibility = 'visible';
-      this.animate([
-        {opacity: 0, transform: 'translateY(-10px) scale(0.8)'},
-        {opacity: 1, transform: 'translateY(0px) scale(1)'}
-      ], 300);
+      if (this.animate) {
+        this.animate([
+          {opacity: 0, transform: 'translateY(-10px) scale(0.8)'},
+          {opacity: 1, transform: 'translateY(0px) scale(1)'}
+        ], 300);
+      }
     }, 1);
   }
 
   _doClose() {
     this.style.display = 'block';
+    if (!this.animate) {
+      return new Promise(r => r());
+    }
     this.animate([
       {opacity: 1, transform: 'translateY(0px) scale(1)'},
       {opacity: 0, transform: 'translateY(-10px) scale(0.8)'}
