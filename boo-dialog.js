@@ -113,12 +113,16 @@ class BooDialog extends LitElement {
   }
 
   _doClose() {
-    if (!this.animate) {
-      this.style.display = 'none';
-      this.dispatchEvent(new CustomEvent("closed"));
-      return new Promise(r => r());
-    }
     this.style.display = 'block';
+    if (!this.animate) {
+      return new Promise(r => {
+        setTimeout(() => {
+          this.style.display = 'none';
+          this.dispatchEvent(new CustomEvent("closed"));
+          r();
+        });
+      });
+    }
     this.animate([
       {opacity: 1, transform: 'translateY(0px) scale(1)'},
       {opacity: 0, transform: 'translateY(-10px) scale(0.8)'}
