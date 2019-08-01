@@ -43,8 +43,8 @@ class BooDialog extends LitElement {
 
   constructor() {
     super();
-    this.marginVert = 0;
-    this.marginHori = 0;
+    this.marginVert = 12;
+    this.marginHori = 12;
     this.noAutoClose = false;
     this.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent("click-dialog-out"));
@@ -83,7 +83,17 @@ class BooDialog extends LitElement {
     }
     this.opened = true;
     return new Promise(r => {
-      setTimeout(() => r(), 300);
+      setTimeout(() => {
+        if (!window._opened_dialogs || window._opened_dialogs && window._opened_dialogs.length == 0) {
+          let body = document.querySelector('body');
+          window._old_body_overflow_by_dialog = body.style.overflow;
+          window._opened_dialogs = [1];
+          body.style.overflow = 'hidden';
+        } else {
+          window._opened_dialogs.push(1);
+        }
+        r();
+      }, 300);
     });
   }
 
@@ -119,6 +129,11 @@ class BooDialog extends LitElement {
         setTimeout(() => {
           this.style.display = 'none';
           this.dispatchEvent(new CustomEvent("closed"));
+          window._opened_dialogs = window._opened_dialogs.splice(0, 1);
+          if (window._opened_dialogs.length == 0) {
+            let body = document.querySelector('body');
+            body.style.overflow = window._old_body_overflow_by_dialog;
+          }
           r();
         });
       });
@@ -131,6 +146,11 @@ class BooDialog extends LitElement {
       setTimeout(() => {
         this.style.display = 'none';
         this.dispatchEvent(new CustomEvent("closed"));
+        window._opened_dialogs.splice(0, 1);
+        if (window._opened_dialogs.length == 0) {
+          let body = document.querySelector('body');
+          body.style.overflow = window._old_body_overflow_by_dialog;
+        }
         r();
       }, 280);
     });
