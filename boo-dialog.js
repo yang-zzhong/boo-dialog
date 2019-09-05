@@ -103,7 +103,7 @@ class BooDialog extends LitElement {
   }
 
   saveBodyOverflow() {
-    if (!window._opened_dialogs) {
+    if (!window._opened_dialogs || window._opened_dialogs && window._opened_dialogs.length == 0) {
       let body = document.querySelector('body');
       window._old_body_overflow_by_dialog = body.style.overflow;
       window._opened_dialogs = [1];
@@ -114,7 +114,7 @@ class BooDialog extends LitElement {
   }
 
   recoveryBodyOverflow() {
-    window._opened_dialogs = window._opened_dialogs.splice(0, 1);
+    window._opened_dialogs.splice(0, 1);
     if (window._opened_dialogs.length == 0) {
       let body = document.querySelector('body');
       body.style.overflow = window._old_body_overflow_by_dialog;
