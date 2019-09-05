@@ -5,6 +5,7 @@ class BooDialog extends LitElement {
   static get properties() {
     return {
       opened: {type: Boolean, reflect: true},
+      shadow: {type: Boolean, reflect: true},
       noAutoClose: {type: Boolean, reflect: true, attribute: 'no-auto-close'},
       marginVert: {type: Number, reflect: true, attribute: 'margin-vert'},
       marginHori: {type: Number, reflect: true, attribute: 'margin-hori'}
@@ -21,6 +22,10 @@ class BooDialog extends LitElement {
         position: fixed;
         z-index: 100000;
         display: none;
+      }
+      :host([shadow]) {
+        -webkit-backdrop-filter: saturate(180%) blur(10px);
+        backdrop-filter: saturate(180%) blur(10px);
       }
       :host([opened]) {
         display: block;
@@ -68,7 +73,17 @@ class BooDialog extends LitElement {
   }
 
   render() {
-    return html`<slot></slot>`;
+    const renderBg = () => {
+      if (this.shadow) {
+        return html`
+          <div class="bg"></div>
+        `;
+      }
+    }
+    return html`
+      ${renderBg()}
+      <slot></slot>
+    `;
   }
 
   firstUpdated() {
@@ -83,18 +98,27 @@ class BooDialog extends LitElement {
     }
     this.opened = true;
     return new Promise(r => {
-      setTimeout(() => {
-        if (!window._opened_dialogs || window._opened_dialogs && window._opened_dialogs.length == 0) {
-          let body = document.querySelector('body');
-          window._old_body_overflow_by_dialog = body.style.overflow;
-          window._opened_dialogs = [1];
-          body.style.overflow = 'hidden';
-        } else {
-          window._opened_dialogs.push(1);
-        }
-        r();
-      }, 300);
+      setTimeout(() => r(), 300);
     });
+  }
+
+  saveBodyOverflow() {
+    if (!window._opened_dialogs) {
+      let body = document.querySelector('body');
+      window._old_body_overflow_by_dialog = body.style.overflow;
+      window._opened_dialogs = [1];
+      body.style.overflow = 'hidden';
+    } else {
+      window._opened_dialogs.push(1);
+    }
+  }
+
+  recoveryBodyOverflow() {
+    window._opened_dialogs = window._opened_dialogs.splice(0, 1);
+    if (window._opened_dialogs.length == 0) {
+      let body = document.querySelector('body');
+      body.style.overflow = window._old_body_overflow_by_dialog;
+    }
   }
 
   updateUI() {
@@ -110,47 +134,71 @@ class BooDialog extends LitElement {
   _doOpen() {
     this.style.display = 'block';
     this.style.visibility = 'hidden';
+    this.saveBodyOverflow();
     setTimeout(() => {
       this.updateUI();
       this.style.visibility = 'visible';
-      if (this.animate) {
-        this.animate([
-          {opacity: 0, transform: 'translateY(-10px) scale(0.8)'},
-          {opacity: 1, transform: 'translateY(0px) scale(1)'}
-        ], 300);
-      }
+      this._playWrapperOpenAnimation();
+      this._playBgOpenAnimation();
     }, 1);
+  }
+
+  _playWrapperOpenAnimation() {
+    let wrapper = this.querySelector('[wrapper]');
+    if (wrapper && wrapper.animate) {
+      wrapper.animate([
+        {transform: 'translateY(-10px) scale(0.8)'},
+        {transform: 'translateY(0px) scale(1)'}
+      ], 300);
+    }
+  }
+
+  _playBgOpenAnimation() {
+    if (this.animate) {
+      this.animate([
+        {opacity: 0},
+        {opacity: 1}
+      ], 300);
+    }
+  }
+
+  _playWrapperCloseAnimation() {
+    let wrapper = this.querySelector('[wrapper]');
+    if (wrapper && wrapper.animate) {
+      wrapper.animate([
+        {transform: 'translateY(0px) scale(1)'},
+        {transform: 'translateY(-10px) scale(0.8)'}
+      ], 300);
+    }
+  }
+
+  _playBgCloseAnimation() {
+    if (this.animate) {
+      this.animate([
+        {opacity: 1},
+        {opacity: 0}
+      ], 300);
+    }
   }
 
   _doClose() {
     this.style.display = 'block';
+    this.recoveryBodyOverflow();
     if (!this.animate) {
       return new Promise(r => {
         setTimeout(() => {
           this.style.display = 'none';
           this.dispatchEvent(new CustomEvent("closed"));
-          window._opened_dialogs = window._opened_dialogs.splice(0, 1);
-          if (window._opened_dialogs.length == 0) {
-            let body = document.querySelector('body');
-            body.style.overflow = window._old_body_overflow_by_dialog;
-          }
           r();
         });
       });
     }
-    this.animate([
-      {opacity: 1, transform: 'translateY(0px) scale(1)'},
-      {opacity: 0, transform: 'translateY(-10px) scale(0.8)'}
-    ], 300);
+    this._playWrapperCloseAnimation();
+    this._playBgCloseAnimation();
     return new Promise(r => {
       setTimeout(() => {
         this.style.display = 'none';
         this.dispatchEvent(new CustomEvent("closed"));
-        window._opened_dialogs.splice(0, 1);
-        if (window._opened_dialogs.length == 0) {
-          let body = document.querySelector('body');
-          body.style.overflow = window._old_body_overflow_by_dialog;
-        }
         r();
       }, 280);
     });
